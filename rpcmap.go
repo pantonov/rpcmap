@@ -43,10 +43,11 @@ type funcDefMap map[string]*FuncDef
 
 var NoMethodError = errors.New("unknown method")
 var typeOfError   = reflect.TypeOf((*error)(nil)).Elem()
+var typeOfEmptyStruct = reflect.TypeOf(struct{}{})
 
 func methTypeCheck(t reflect.Type, extraArg int) bool {
     num_in := t.NumIn() - extraArg
-    if !(t.Kind() == reflect.Func && num_in > 0 && num_in <= 2) ||
+    if !(t.Kind() == reflect.Func && num_in >= 0 && num_in <= 2) ||
         !(t.NumOut() == 1 || t.NumOut() == 2) {
             return false
     }

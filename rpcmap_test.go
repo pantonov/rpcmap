@@ -30,9 +30,15 @@ func TestF(t *testing.T) {
     r.Func("f3", func(i int) error {
         return fmt.Errorf("Hi,%d", i)
     })
+    r.Func("f4", func() (string, error) {
+        return "blah", nil
+    })
     _, err1 := r.CallFunc("f1", nil, testInput{A: "xx", B:5 })
     _, err2 := r.CallFunc("f2", &testCtx{s: "T"}, testInput{A: "xx", B:6 })
     _, err3 := r.CallFunc("f3",nil, 3)
+    if r4, _ := r.CallFunc("f4", nil, nil); r4 != "blah" {
+        t.FailNow()
+    }
     if err1.Error() != "Hi,xx/5" || err2.Error() != "Hi,xx/6/T" || err3.Error() != "Hi,3" {
         t.FailNow()
     }
@@ -64,6 +70,10 @@ func (s *S) Meth3(ctx* testCtx, i *testInput) (*testResult, error) {
     return &testResult{ o: out }, nil
 }
 
+func (s *S) Meth4() (*testResult, error) {
+    return &testResult{ o: "hi" }, nil
+}
+
 func TestS(t *testing.T) {
     r := New()
     svc := S{}
@@ -92,6 +102,10 @@ func TestS(t *testing.T) {
     res, _ := r.CallMethod("S.meth3", &testCtx{s:"cc"}, &testInput{A: "tt", B:77 })
     if res.(*testResult).o != "Hi,tt/77/cc" {
         t.Fatalf("S.Meth3 with testResult")
+    }
+    res4, _ := r.CallMethod("S.meth4", nil, nil)
+    if res4.(*testResult).o != "hi" {
+        t.Fatalf("S.Meth4 fail")
     }
 }
 

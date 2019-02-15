@@ -5,8 +5,8 @@ import (
 )
 
 type FuncDef struct {
-    hasCtx   bool        // has context parameter
-    hasRv    bool        // has context value
+    argno    int
+    hasRv    bool
     argsType reflect.Type
     meth     reflect.Value
     data     map[string]interface{}
@@ -14,6 +14,8 @@ type FuncDef struct {
 
 // Maps function to call name
 // Possible function signatures:
+// func() error
+// func() (outputType, error)
 // func(inputType) error
 // func(inputType) (outputType, error)
 // func(contextType, inputType) error
@@ -23,30 +25,39 @@ func makeFuncDef(f interface{}) *FuncDef {
     if !methTypeCheck(t, 0) {
         panic("Invalid function signature for RpcMap.Func")
     }
-    return &FuncDef{
+    fd := &FuncDef{
         meth:     reflect.ValueOf(f),
-        argsType: t.In(t.NumIn() - 1),
-        hasCtx:   2 == t.NumIn(),
+        argno:    t.NumIn(),
         hasRv:    2 == t.NumOut(),
         data:     make(map[string]interface{}),
     }
+    if t.NumIn() == 0 {
+        fd.argsType = typeOfEmptyStruct
+    } else {
+        fd.argsType = t.In(t.NumIn() - 1)
+    }
+    return fd
 }
 
 // Call a function. If function signature has no return value, returned interface is nil.
 // If function does not accept context, ctx parameter will be ignored, you can pass nil.
 func (fd* FuncDef) Call(ctx interface{}, in interface{}) (interface{}, error) {
     var in_args []reflect.Value
-    if fd.hasCtx {
-        in_args = []reflect.Value{ reflect.ValueOf(ctx), reflect.ValueOf(in) }
-    } else {
+    switch fd.argno {
+    case 0:
+        in_args = []reflect.Value{}
+    case 1:
         in_args = []reflect.Value{ reflect.ValueOf(in) }
+    case 2:
+        in_args = []reflect.Value{ reflect.ValueOf(ctx), reflect.ValueOf(in) }
     }
     rvs := fd.meth.Call(in_args)
     if fd.hasRv {
         rerr,_ := rvs[1].Interface().(error)
         return rvs[0].Interface(), rerr
     } else {
-        return nil, rvs[0].Interface().(error)
+        rerr,_ := rvs[0].Interface().(error)
+        return nil, rerr
     }
     return nil, nil
 }

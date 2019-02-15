@@ -13,8 +13,8 @@ type ServiceDef struct {
 }
 
 type ServiceMethod struct {
-    hasCtx      bool        // has context parameter
     hasRv       bool        // has context value
+    argno       int
 
     method    reflect.Method // receiver method
     argsType  reflect.Type   // type of the request argument
@@ -55,7 +55,7 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
             method:    method,
             argsType:  mtype.In(mtype.NumIn() - 1),
             rcvr:      &s.rcvr,
-            hasCtx:     3 == mtype.NumIn(),
+            argno:      mtype.NumIn(),
             hasRv:      2 == mtype.NumOut(),
             data:     make(map[string]interface{}),
         }
@@ -75,10 +75,13 @@ func (s *ServiceDef) GetMethod(name string) Callable {
 // If method does not accept context, ctx parameter will be ignored, you can pass nil.
 func (ms *ServiceMethod) Call(ctx interface{}, in interface{}) (interface{}, error) {
     var in_args []reflect.Value
-    if ms.hasCtx {
+    switch ms.argno {
+    case 3:
         in_args = []reflect.Value{ *ms.rcvr, reflect.ValueOf(ctx), reflect.ValueOf(in) }
-    } else {
+    case 2:
         in_args = []reflect.Value{ *ms.rcvr, reflect.ValueOf(in) }
+    case 1:
+        in_args = []reflect.Value{ *ms.rcvr }
     }
     rvs := ms.method.Func.Call(in_args)
     if ms.hasRv {
