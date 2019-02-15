@@ -18,6 +18,16 @@ type RpcMap struct {
     fieldNameMapper func(string) string
     funcs           funcDefMap
     services        servicesMap
+    defaultService  *ServiceDef
+}
+
+// Callable object (function or method)
+type Callable interface {
+    // Call method or function with context (may be nil) and input argument inArg
+    Call(ctx interface{}, inArg interface{}) (interface{}, error)
+
+    // create instance of inArg
+    MakeInArg() interface{}
 }
 
 func New() *RpcMap {
@@ -51,9 +61,10 @@ func methTypeCheck(t reflect.Type, extraArg int) bool {
     return true
 }
 
-func (rm* RpcMap) Func(name string, f interface{}) {
+func (rm* RpcMap) Func(name string, f interface{}) Callable {
     fd := makeFuncDef(f)
     rm.funcs[name] = fd
+    return fd
 }
 
 // Register named service. See docs of RpcMap.Func() for possible method signatures.
@@ -69,8 +80,14 @@ func (rm* RpcMap) Service(i interface{}) *ServiceDef {
     return rm.NamedService("", i)
 }
 
-// Get a function definition by registered name
-func (rm* RpcMap) GetFunc(name string) *FuncDef {
+// Registers service and makes it default, so its method can be called with CallAny with method name only
+func (rm* RpcMap) DefaultService(rcvr interface{}) *ServiceDef {
+    rm.defaultService = rm.Service(rcvr)
+    return rm.defaultService
+}
+
+// Get a function callable object by registered name
+func (rm* RpcMap) GetFunc(name string) Callable {
     return rm.funcs[name]
 }
 
@@ -88,18 +105,38 @@ func (rm *RpcMap) CallFunc(name string, ctx interface{}, in interface{}) (interf
     return md.Call(ctx, in)
 }
 
-// Get service method definition by name, using dotted notation ServiceName.Method
-
-func (rm *RpcMap) GetServiceMethod(name string) *ServiceMethod {
+// Get service method callable object by name, using dotted notation ServiceName.Method
+// or just method name, if defaultService was defined
+func (rm *RpcMap) GetServiceMethod(name string) Callable {
     n := strings.Split(name, ".")
-    if len(n) != 2 {
+    switch len(n) {
+    case 2:
+        sd := rm.GetService(n[0])
+        if nil == sd {
+            return nil
+        }
+        return sd.GetMethod(n[1])
+    case 1:
+        if nil == rm.defaultService {
+            return nil
+        }
+        return rm.defaultService.GetMethod(n[0])
+    }
+    return nil
+}
+
+// Returns function OR method of default service
+func (rm* RpcMap) GetAnyCallable(name string) Callable {
+    if c := rm.GetFunc(name); nil != c {
+        return c
+    }
+    if nil == rm.defaultService {
         return nil
     }
-    sd := rm.GetService(n[0])
-    if nil == sd {
-        return nil
+    if c := rm.defaultService.GetMethod(name); nil != c {
+        return c
     }
-    return sd.GetMethod(n[1])
+    return nil
 }
 
 // Call service method by name, using dotted notation ServiceName.Method
@@ -110,7 +147,6 @@ func (rm *RpcMap) CallMethod(name string, ctx interface{}, in interface{}) (inte
     }
     return md.Call(ctx, in)
 }
-
 
 // Sets field name mapper when registering funcs from service. Default name mapper is toLower().
 // If name mapper returns empty string, method will be skipped.

@@ -10,9 +10,11 @@ type ServiceDef struct {
     name     string
     rcvr     reflect.Value             // receiver of funcs for the service
     methods  map[string]*ServiceMethod // registered funcs
+    Data     map[string]interface{}
 }
 
 type ServiceMethod struct {
+    Callable
     hasCtx      bool        // has context parameter
     hasRv       bool        // has context value
 
@@ -29,6 +31,7 @@ func makeService(name string, rcvr interface{}) (s *ServiceDef) {
         name:     name,
         rcvr:     reflect.ValueOf(rcvr),
         methods:  make(map[string]*ServiceMethod),
+        Data:     make(map[string]interface{}),
     }
     rcvrType := reflect.TypeOf(rcvr)
 
