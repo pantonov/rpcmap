@@ -10,7 +10,7 @@ type FuncDef struct {
     hasRv    bool        // has context value
     argsType reflect.Type
     meth     reflect.Value
-    Data     map[string]interface{}
+    data     map[string]interface{}
 }
 
 // Maps function to call name
@@ -29,6 +29,7 @@ func makeFuncDef(f interface{}) *FuncDef {
         argsType: t.In(t.NumIn() - 1),
         hasCtx:   2 == t.NumIn(),
         hasRv:    2 == t.NumOut(),
+        data:     make(map[string]interface{}),
     }
 }
 
@@ -57,5 +58,12 @@ func (fd* FuncDef) MakeInArg() interface{} {
     return reflect.New(fd.argsType.Elem()).Interface()
 }
 
+func (fd* FuncDef) Set(key string, v interface{}) {
+    fd.data[key] = v
+}
+
+func (fd* FuncDef) Get(key string) interface{} {
+    return fd.data[key]
+}
 
 

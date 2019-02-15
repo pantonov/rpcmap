@@ -28,6 +28,10 @@ type Callable interface {
 
     // create instance of inArg
     MakeInArg() interface{}
+
+    // Set and get arbitrary function/method definition meta-data (e.g. privilege level for run-time checking)
+    Set(key string, value interface{})
+    Get(key string) interface{}
 }
 
 func New() *RpcMap {
