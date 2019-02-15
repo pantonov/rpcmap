@@ -68,14 +68,14 @@ func TestS(t *testing.T) {
     r := New()
     svc := S{}
     r.Service(&svc)
-    if _, err := r.CallMethod("S.Meth1", nil, &testInput{A: "zz", B:3 }); err.Error() != "Hi,zz/3" {
-        t.Fatalf("S.Meth1")
+    if _, err := r.CallMethod("S.meth1", nil, &testInput{A: "zz", B:3 }); err.Error() != "Hi,zz/3" {
+        t.Fatalf("S.meth1")
     }
     sd := r.GetService("S")
     if nil == sd {
         t.Fatalf("Service not found")
     }
-    md := sd.GetMethod("Meth2")
+    md := sd.GetMethod("meth2")
     if nil == md {
         t.Fatalf("Method not found")
     }
@@ -89,7 +89,7 @@ func TestS(t *testing.T) {
     if _, err1 := md.Call(&testCtx{s:"uu"}, &testInput{A: "kk", B:6 }); err1.Error() != "Hi,kk/6/uu" {
         t.Fatal(err1)
     }
-    res, _ := r.CallMethod("S.Meth3", &testCtx{s:"cc"}, &testInput{A: "tt", B:77 })
+    res, _ := r.CallMethod("S.meth3", &testCtx{s:"cc"}, &testInput{A: "tt", B:77 })
     if res.(*testResult).o != "Hi,tt/77/cc" {
         t.Fatalf("S.Meth3 with testResult")
     }

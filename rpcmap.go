@@ -74,7 +74,7 @@ func (rm* RpcMap) Func(name string, f interface{}) Callable {
 // Register named service. See docs of RpcMap.Func() for possible method signatures.
 // Note that methods with unmatched signatures are skipped, no errors reported.
 func (rm *RpcMap) NamedService(name string, rcvr interface{}) *ServiceDef {
-    s := makeService(name, rcvr)
+    s := makeService(rm.fieldNameMapper, name, rcvr)
     rm.services[s.name] = s
     return s
 }

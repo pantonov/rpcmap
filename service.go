@@ -26,7 +26,7 @@ type ServiceMethod struct {
 
 // Register named service. See docs of RpcMap.Func() for possible method signatures.
 // Note that funcs with not matched signatures are skipped, no errors reported.
-func makeService(name string, rcvr interface{}) (s *ServiceDef) {
+func makeService(fm func(string) string, name string, rcvr interface{}) (s *ServiceDef) {
     s = &ServiceDef{
         name:     name,
         rcvr:     reflect.ValueOf(rcvr),
@@ -52,7 +52,7 @@ func makeService(name string, rcvr interface{}) (s *ServiceDef) {
         if !methTypeCheck(mtype, 1) {
             continue
         }
-        s.methods[method.Name] = &ServiceMethod{
+        s.methods[fm(method.Name)] = &ServiceMethod{
             method:    method,
             argsType:  mtype.In(mtype.NumIn() - 1),
             rcvr:      &s.rcvr,
