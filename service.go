@@ -97,7 +97,7 @@ func (ms *ServiceMethod) Call(ctx interface{}, in interface{}) (interface{}, err
 // Create input argument for function based on it's prototype. If function takes pointer, it will create
 // original type.
 func (s *ServiceMethod) MakeInArg() interface{} {
-    return reflect.New(s.argsType.Elem()).Interface()
+    return makeArg(s.argsType)
 }
 
 func (s* ServiceMethod) Set(key string, v interface{}) {

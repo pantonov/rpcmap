@@ -66,6 +66,13 @@ func methTypeCheck(t reflect.Type, extraArg int) bool {
     return true
 }
 
+func makeArg(t reflect.Type) interface{} {
+    if t.Kind() == reflect.Ptr {
+        t = t.Elem()
+    }
+    return reflect.New(t).Interface()
+}
+
 func (rm* RpcMap) Func(name string, f interface{}) Callable {
     fd := makeFuncDef(f)
     rm.funcs[name] = fd

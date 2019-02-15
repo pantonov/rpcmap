@@ -103,7 +103,9 @@ func TestS(t *testing.T) {
     if res.(*testResult).o != "Hi,tt/77/cc" {
         t.Fatalf("S.Meth3 with testResult")
     }
-    res4, _ := r.CallMethod("S.meth4", nil, nil)
+    m4 := r.GetServiceMethod("S.meth4")
+    m4a := m4.MakeInArg()
+    res4, _ := m4.Call(nil, m4a)
     if res4.(*testResult).o != "hi" {
         t.Fatalf("S.Meth4 fail")
     }
