@@ -126,7 +126,7 @@ func (rm *RpcMap) GetServiceMethod(name string) Callable {
 }
 
 // Returns function OR method of default service
-func (rm* RpcMap) GetAnyCallable(name string) Callable {
+func (rm* RpcMap) GetCallable(name string) Callable {
     if c := rm.GetFunc(name); nil != c {
         return c
     }
