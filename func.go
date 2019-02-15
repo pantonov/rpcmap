@@ -5,7 +5,6 @@ import (
 )
 
 type FuncDef struct {
-    Callable
     hasCtx   bool        // has context parameter
     hasRv    bool        // has context value
     argsType reflect.Type

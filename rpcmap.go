@@ -92,7 +92,11 @@ func (rm* RpcMap) DefaultService(rcvr interface{}) *ServiceDef {
 
 // Get a function callable object by registered name
 func (rm* RpcMap) GetFunc(name string) Callable {
-    return rm.funcs[name]
+    f := rm.funcs[name]
+    if nil != f {
+        return f
+    }
+    return nil
 }
 
 // Get a function definition by registered name
@@ -137,10 +141,7 @@ func (rm* RpcMap) GetCallable(name string) Callable {
     if nil == rm.defaultService {
         return nil
     }
-    if c := rm.defaultService.GetMethod(name); nil != c {
-        return c
-    }
-    return nil
+    return rm.defaultService.GetMethod(name)
 }
 
 // Call service method by name, using dotted notation ServiceName.Method

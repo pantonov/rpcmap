@@ -13,7 +13,6 @@ type ServiceDef struct {
 }
 
 type ServiceMethod struct {
-    Callable
     hasCtx      bool        // has context parameter
     hasRv       bool        // has context value
 
@@ -64,8 +63,12 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
     return
 }
 
-func (s *ServiceDef) GetMethod(name string) *ServiceMethod {
-    return s.methods[name]
+func (s *ServiceDef) GetMethod(name string) Callable {
+    m := s.methods[name]
+    if nil != m {
+        return m
+    }
+    return nil
 }
 
 // Call a method f function signature has no return value, returned interface is nil.
@@ -82,7 +85,8 @@ func (ms *ServiceMethod) Call(ctx interface{}, in interface{}) (interface{}, err
         rerr,_ := rvs[1].Interface().(error)
         return rvs[0].Interface(), rerr
     } else {
-        return nil, rvs[0].Interface().(error)
+        rerr,_ := rvs[0].Interface().(error)
+        return nil, rerr
     }
     return nil, nil
 }
