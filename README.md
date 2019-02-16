@@ -50,8 +50,8 @@ mapper.Func("f3", func(i int) (string, error) { // register function
         return fmt.Sprintf("Hi,%d", i), nil
 })
 
-// Call service method with dotted notation. Note that the method name is lowercase (uses default mapper)
-// To use method names only, register service with DefaultService()
+// Call service method with dotted notation. Note that the method name is lowercase when default mapper is used.
+// To call service methods by method name only, register service with DefaultService().
 rv1, err := mapper.CallMethod("S.hello", nil, &testInput{ Foo: "zz"})
 fmt.Printf("rv.greeting = %s", rv.(*testOutput).Greeting)
 
