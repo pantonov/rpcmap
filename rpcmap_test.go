@@ -92,7 +92,7 @@ func TestS(t *testing.T) {
     if _, err1 := md.Call(&testCtx{s:"ku"}, &testInput{A: "yy", B:2 }); err1.Error() != "Hi,yy/2/ku" {
         t.Fatalf("md.Call")
     }
-    arg := md.MakeInArg()
+    arg := md.MakeArg()
     if err := json.Unmarshal([]byte(`{"A":"xx","B":9}`), arg); nil != err {
         t.Fatal(err)
     }
@@ -104,7 +104,7 @@ func TestS(t *testing.T) {
         t.Fatalf("S.Meth3 with testResult")
     }
     m4 := r.GetServiceMethod("S.meth4")
-    m4a := m4.MakeInArg()
+    m4a := m4.MakeArg()
     res4, _ := m4.Call(nil, m4a)
     if res4.(*testResult).o != "hi" {
         t.Fatalf("S.Meth4 fail")

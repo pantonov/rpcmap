@@ -96,8 +96,16 @@ func (ms *MethodDef) Call(ctx interface{}, in interface{}) (interface{}, error) 
 
 // Create input argument for function based on it's prototype. If function takes pointer, it will create
 // original type.
-func (s *MethodDef) MakeInArg() interface{} {
-    return makeArg(s.argsType)
+func (ms *MethodDef) MakeArg() interface{} {
+    return makeArg(ms.argsType)
+}
+
+func (ms* MethodDef) InArgs() int {
+    return ms.argno - 1
+}
+
+func (ms* MethodDef) HasOutArg() bool {
+    return ms.hasRv
 }
 
 // Returns list of registered methods

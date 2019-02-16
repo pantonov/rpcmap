@@ -64,8 +64,16 @@ func (fd* FuncDef) Call(ctx interface{}, in interface{}) (interface{}, error) {
 
 // Create input argument for function based on it's prototype. If function takes pointer, it will create
 // original type.
-func (fd* FuncDef) MakeInArg() interface{} {
+func (fd* FuncDef) MakeArg() interface{} {
     return makeArg(fd.argsType)
+}
+
+func (fd* FuncDef) InArgs() int {
+    return fd.argno
+}
+
+func (fd* FuncDef) HasOutArg() bool {
+    return fd.hasRv
 }
 
 func (fd* FuncDef) Set(key string, v interface{}) {

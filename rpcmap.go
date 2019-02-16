@@ -28,7 +28,13 @@ type Callable interface {
 
     // create instance of input argument of a method. If method has no arguments, this method
     // will return instance of empty struct, to keep *.Unmarshal happy.
-    MakeInArg() interface{}
+    MakeArg() interface{}
+
+    // Number of input arguments (0 if no args, 1 if input arg only, 2 if input arg and context)
+    InArgs() int
+
+    // Has result value, not only error
+    HasOutArg() bool
 
     // Set and get arbitrary function/method definition meta-data (e.g. privilege level for run-time checking)
     Set(key string, value interface{})
