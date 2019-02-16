@@ -1,3 +1,12 @@
+// RPC-like calls mapper: by name, and interface{} input and output parameters which should
+// match signatures of registered functions and services.
+//
+// It supports both services and functions, and allows several possible function signatures for convenience.
+//
+// Note that registrations (Func, ServiceDef) are not goroutine-safe, lock it yourself if you need that.
+//
+// See README.md and rpcmap_test.go for usage examples.
+//
 package rpcmap
 
 import (
@@ -8,12 +17,7 @@ import (
     "unicode/utf8"
 )
 
-// RPC-like calls mapper: by name, and interface{} input and output parameters which should
-// match signatures of registered functions and services.
-//
-// It supports both services and functions, and supports multiple possible function signatures for convenience.
-//
-// Note that registrations (Func, ServiceDef) are not goroutine-safe, lock it yourself if you need that.
+// Function and method mapper instance
 type RpcMap struct {
     fieldNameMapper func(string) string
     funcs           funcDefMap
@@ -80,26 +84,37 @@ func makeArg(t reflect.Type) interface{} {
     return reflect.New(t).Interface()
 }
 
+// Register function with name. Possible function signatures:
+// func() error
+// func() (outputType, error)
+// func(inputType) error
+// func(inputType) (outputType, error)
+// func(contextType, inputType) error
+// func(contextType, inputType) (outputType, error)
 func (rm* RpcMap) Func(name string, f interface{}) Callable {
     fd := makeFuncDef(f)
     rm.funcs[name] = fd
     return fd
 }
 
-// Register named service. See docs of RpcMap.Func() for possible method signatures.
-// Note that methods with unmatched signatures are skipped, no errors reported.
+// Register service with explicit name (overriding default, which is name of service type).
+// See docs of RpcMap.Func() for possible method signatures.
+// Note that methods with not allowed signatures are skipped, no errors reported.
 func (rm *RpcMap) NamedService(name string, rcvr interface{}) *ServiceDef {
     s := makeService(rm.fieldNameMapper, name, rcvr)
     rm.services[s.name] = s
     return s
 }
 
-// Maps all methods from passed ServiceDef instance, applying name mapper.
-func (rm* RpcMap) Service(i interface{}) *ServiceDef {
-    return rm.NamedService("", i)
+// Register service with name equal to rcvr type name.
+// Note that methods with not allowed signatures are skipped, no errors reported.
+func (rm* RpcMap) Service(rcvr interface{}) *ServiceDef {
+    return rm.NamedService("", rcvr)
 }
 
-// Registers service and makes it default, so its method can be called with CallAny with method name only
+// Registers service and makes it default, so its method can be called with method name only.
+// Note that methods with not allowed signatures are skipped, no errors reported.
+// Only single default service can be registered
 func (rm* RpcMap) DefaultService(rcvr interface{}) *ServiceDef {
     rm.defaultService = rm.Service(rcvr)
     return rm.defaultService
@@ -128,8 +143,8 @@ func (rm *RpcMap) CallFunc(name string, ctx interface{}, in interface{}) (interf
     return md.Call(ctx, in)
 }
 
-// Get service method callable object by name, using dotted notation ServiceName.Method
-// or just method name, if defaultService was defined
+// Get service method callable object by name, using dotted notation ServiceName.Method,
+// or just method name, if service was registered wuth DefaultService().
 func (rm *RpcMap) GetServiceMethod(name string) Callable {
     n := strings.Split(name, ".")
     switch len(n) {
@@ -166,7 +181,7 @@ func (rm *RpcMap) ListFunctions() []*FuncDef {
     return fl
 }
 
-// Returns function OR method of default service
+// Returns registered function callable by name, or method callable from default service
 func (rm* RpcMap) GetCallable(name string) Callable {
     if c := rm.GetFunc(name); nil != c {
         return c
@@ -186,7 +201,7 @@ func (rm *RpcMap) CallMethod(name string, ctx interface{}, in interface{}) (inte
     return md.Call(ctx, in)
 }
 
-// Sets field name mapper when registering funcs from service. Default name mapper is toLower().
+// Sets field name mapper when registering methods for service. Default name mapper is toLower().
 // If name mapper returns empty string, method will be skipped.
 func (rm *RpcMap) SetFieldNameMapper(mapper func(string) string) {
     rm.fieldNameMapper = mapper

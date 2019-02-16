@@ -4,6 +4,7 @@ import (
     "reflect"
 )
 
+// Function definition object
 type FuncDef struct {
     argno    int
     hasRv    bool
@@ -12,14 +13,6 @@ type FuncDef struct {
     data     map[string]interface{}
 }
 
-// Maps function to call name
-// Possible function signatures:
-// func() error
-// func() (outputType, error)
-// func(inputType) error
-// func(inputType) (outputType, error)
-// func(contextType, inputType) error
-// func(contextType, inputType) (outputType, error)
 func makeFuncDef(f interface{}) *FuncDef {
     t := reflect.TypeOf(f)
     if !methTypeCheck(t, 0) {
@@ -68,18 +61,22 @@ func (fd* FuncDef) MakeArg() interface{} {
     return makeArg(fd.argsType)
 }
 
+// Returns number of function arguments
 func (fd* FuncDef) InArgs() int {
     return fd.argno
 }
 
+// Returns true if functions has a result
 func (fd* FuncDef) HasOutArg() bool {
     return fd.hasRv
 }
 
+// Set function meta-data value
 func (fd* FuncDef) Set(key string, v interface{}) {
     fd.data[key] = v
 }
 
+// Get function meta-data value
 func (fd* FuncDef) Get(key string) interface{} {
     return fd.data[key]
 }

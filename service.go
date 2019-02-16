@@ -5,13 +5,14 @@ import (
     "reflect"
 )
 
-// Defines a service mapping
+// Service methods mapper object
 type ServiceDef struct {
     name     string
     rcvr     reflect.Value         // receiver of funcs for the service
     methods  map[string]*MethodDef // registered funcs
 }
 
+// Method definition object
 type MethodDef struct {
     hasRv       bool        // has context value
     argno       int
@@ -63,6 +64,7 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
     return
 }
 
+// Get a service method definition by name
 func (s *ServiceDef) GetMethod(name string) Callable {
     m := s.methods[name]
     if nil != m {
@@ -100,10 +102,12 @@ func (ms *MethodDef) MakeArg() interface{} {
     return makeArg(ms.argsType)
 }
 
+// Returns number of method arguments (not counting receiver).
 func (ms* MethodDef) InArgs() int {
     return ms.argno - 1
 }
 
+// Returns true if method has a result
 func (ms* MethodDef) HasOutArg() bool {
     return ms.hasRv
 }
@@ -117,10 +121,12 @@ func (sd *ServiceDef) ListMethods() []*MethodDef {
     return ml
 }
 
+// Set method meta-data value
 func (s*MethodDef) Set(key string, v interface{}) {
     s.data[key] = v
 }
 
+// Get method meta-data value
 func (s*MethodDef) Get(key string) interface{} {
     return s.data[key]
 }
