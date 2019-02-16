@@ -109,6 +109,7 @@ func TestS(t *testing.T) {
     if res4.(*testResult).o != "hi" {
         t.Fatalf("S.Meth4 fail")
     }
+    json.Unmarshal([]byte("{}"), &res4)
 }
 
 

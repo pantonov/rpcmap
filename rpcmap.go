@@ -26,7 +26,8 @@ type Callable interface {
     // Call method or function with context (may be nil) and input argument inArg
     Call(ctx interface{}, inArg interface{}) (interface{}, error)
 
-    // create instance of inArg
+    // create instance of input argument of a method. If method has no arguments, this method
+    // will return instance of empty struct, to keep *.Unmarshal happy.
     MakeInArg() interface{}
 
     // Set and get arbitrary function/method definition meta-data (e.g. privilege level for run-time checking)
@@ -139,6 +140,24 @@ func (rm *RpcMap) GetServiceMethod(name string) Callable {
         return rm.defaultService.GetMethod(n[0])
     }
     return nil
+}
+
+// Returns list of registered services
+func (rm* RpcMap) ListServices() []*ServiceDef {
+    sl := make([]*ServiceDef, 0, 16)
+    for _, s := range rm.services {
+        sl = append(sl, s)
+    }
+    return sl
+}
+
+// Returns list of registered functions
+func (rm *RpcMap) ListFunctions() []*FuncDef {
+    fl := make([]*FuncDef, 0, 16)
+    for _, f := range rm.funcs {
+        fl = append(fl, f)
+    }
+    return fl
 }
 
 // Returns function OR method of default service

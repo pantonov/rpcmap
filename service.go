@@ -8,11 +8,11 @@ import (
 // Defines a service mapping
 type ServiceDef struct {
     name     string
-    rcvr     reflect.Value             // receiver of funcs for the service
-    methods  map[string]*ServiceMethod // registered funcs
+    rcvr     reflect.Value         // receiver of funcs for the service
+    methods  map[string]*MethodDef // registered funcs
 }
 
-type ServiceMethod struct {
+type MethodDef struct {
     hasRv       bool        // has context value
     argno       int
 
@@ -29,7 +29,7 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
     s = &ServiceDef{
         name:     name,
         rcvr:     reflect.ValueOf(rcvr),
-        methods:  make(map[string]*ServiceMethod),
+        methods:  make(map[string]*MethodDef),
     }
     rcvrType := reflect.TypeOf(rcvr)
 
@@ -51,7 +51,7 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
         if !methTypeCheck(mtype, 1) {
             continue
         }
-        s.methods[fm(method.Name)] = &ServiceMethod{
+        s.methods[fm(method.Name)] = &MethodDef{
             method:    method,
             argsType:  mtype.In(mtype.NumIn() - 1),
             rcvr:      &s.rcvr,
@@ -73,7 +73,7 @@ func (s *ServiceDef) GetMethod(name string) Callable {
 
 // Call a method f function signature has no return value, returned interface is nil.
 // If method does not accept context, ctx parameter will be ignored, you can pass nil.
-func (ms *ServiceMethod) Call(ctx interface{}, in interface{}) (interface{}, error) {
+func (ms *MethodDef) Call(ctx interface{}, in interface{}) (interface{}, error) {
     var in_args []reflect.Value
     switch ms.argno {
     case 3:
@@ -96,14 +96,23 @@ func (ms *ServiceMethod) Call(ctx interface{}, in interface{}) (interface{}, err
 
 // Create input argument for function based on it's prototype. If function takes pointer, it will create
 // original type.
-func (s *ServiceMethod) MakeInArg() interface{} {
+func (s *MethodDef) MakeInArg() interface{} {
     return makeArg(s.argsType)
 }
 
-func (s* ServiceMethod) Set(key string, v interface{}) {
+// Returns list of registered methods
+func (sd *ServiceDef) ListMethods() []*MethodDef {
+    ml := make([]*MethodDef, 0, 16)
+    for _, s := range sd.methods {
+        ml = append(ml, s)
+    }
+    return ml
+}
+
+func (s*MethodDef) Set(key string, v interface{}) {
     s.data[key] = v
 }
 
-func (s* ServiceMethod) Get(key string) interface{} {
+func (s*MethodDef) Get(key string) interface{} {
     return s.data[key]
 }
