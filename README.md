@@ -5,12 +5,13 @@
 
 * Optimized for use in RPC scenarios
 * Registration of service methods and plain functions
+* Supports (optional) context argument to functions and methods
 * Call functions by name, call service methods by scoped name (Service.Method) or by method name only
 * Supports several function/method signatures (see below)
 * Method name mapper, per-method meta-data
 * stdlib-only dependencies
 
-## Function/method signatures
+## Supported function/method signatures
 ```go
 func() error
 func() (outputType, error)
@@ -54,11 +55,15 @@ mapper.Func("f3", func(i int) (string, error) { // register function
 rv1, err := mapper.CallMethod("S.hello", nil, &testInput{ Foo: "zz"})
 fmt.Printf("rv.greeting = %s", rv.(*testOutput).Greeting)
 
+// Call function
+rv2, err := mapper.CallFunc("f3", nil, 123)
+
+
 // typical RPC case (error handling omitted for simplicity)
-meth := mapper.GetCallable("S.hello")
+meth := mapper.GetCallable(methodName)
 arg := meth.MakeArg() // if function has no args, returns Ptr to empty struct instance
 json.Unmarshal(data, arg)
-rv, err := meth->Call(myContext, arg)
+rv, err := meth->Call(myContext, arg) // If method signature has no context argument, it will be ignored. 
 if nil != err {
     result,_ = json.Marshal(rv)
 }
