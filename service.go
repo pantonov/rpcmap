@@ -17,6 +17,8 @@ type MethodDef struct {
     hasRv       bool        // has context value
     argno       int
 
+    name      string         // mapped name
+    origname  string         // original name name
     method    reflect.Method // receiver method
     argsType  reflect.Type   // type of the request argument
     rcvr      *reflect.Value
@@ -52,7 +54,10 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
         if !methTypeCheck(mtype, 1) {
             continue
         }
-        s.methods[fm(method.Name)] = &MethodDef{
+        name := fm(method.Name)
+        s.methods[name] = &MethodDef{
+            origname:  method.Name,
+            name:      name,
             method:    method,
             argsType:  mtype.In(mtype.NumIn() - 1),
             rcvr:      &s.rcvr,
@@ -64,9 +69,19 @@ func makeService(fm func(string) string, name string, rcvr interface{}) (s *Serv
     return
 }
 
+// Iterate over mapped method definitions and remove these for which filter_func returns false.
+// This can be used for partial service mapping.
+func (sd* ServiceDef) Filter(filter_func func(md*MethodDef) bool) {
+    for _, m := range sd.methods {
+        if !filter_func(m) {
+            delete(sd.methods, m.name)
+        }
+    }
+}
+
 // Get a service method definition by name
-func (s *ServiceDef) GetMethod(name string) Callable {
-    m := s.methods[name]
+func (sd *ServiceDef) GetMethod(name string) Callable {
+    m := sd.methods[name]
     if nil != m {
         return m
     }
@@ -94,6 +109,11 @@ func (ms *MethodDef) Call(ctx interface{}, in interface{}) (interface{}, error) 
         return nil, rerr
     }
     return nil, nil
+}
+
+// Original method name, without name mapping applied
+func (ms* MethodDef) Name() string {
+    return ms.origname
 }
 
 // Create input argument for function based on it's prototype. If function takes pointer, it will create

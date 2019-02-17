@@ -8,7 +8,7 @@
 * Supports (optional) context argument to functions and methods
 * Call functions by name, call service methods by scoped name (Service.Method) or by method name only
 * Supports several function/method signatures (see below)
-* Method name mapper, per-method meta-data
+* Method name mapper and registered methods filtering
 * stdlib-only dependencies
 
 ## Supported function/method signatures
