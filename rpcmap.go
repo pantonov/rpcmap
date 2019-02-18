@@ -31,7 +31,7 @@ type Callable interface {
     Call(ctx interface{}, inArg interface{}) (interface{}, error)
 
     // create instance of input argument of a method. If method has no arguments, this method
-    // will return instance of empty struct, to keep *.Unmarshal happy.
+    // will return instance of NoArg (synonym of struct{}), to keep *.Unmarshal happy.
     MakeArg() interface{}
 
     // Number of input arguments (0 if no args, 1 if input arg only, 2 if input arg and context)
@@ -48,6 +48,10 @@ type Callable interface {
 func New() *RpcMap {
     return &RpcMap{ funcs: make(funcDefMap), services: make(servicesMap), fieldNameMapper: strings.ToLower }
 }
+
+// Hint: use `_*rpcmap.NoArg` as a second parameter in methods which take context but do not take input argument
+// e.g. `func(ctx myContext, _*rpcmap.NoArg)` error
+type NoArg = struct{}
 
 type servicesMap map[string]*ServiceDef
 type funcDefMap map[string]*FuncDef
